@@ -11,6 +11,7 @@ def get_bins(vocab_size, block_size):
     words_per_bin = vocab_size/num_bins 
 
     vocab_ordering = np.arange(vocab_size)
+    np.random.seed(block_size)
     np.random.shuffle(vocab_ordering)
 
     bin2words = [vocab_ordering[int(i*words_per_bin):int((i+1)*words_per_bin)] for i in range(num_bins)]

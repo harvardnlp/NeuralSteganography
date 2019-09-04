@@ -1,4 +1,5 @@
 import numpy as np
+import bitarray
 import sys
 import re
 import math
@@ -17,9 +18,10 @@ def main():
     ## PARAMETERS
     message_str = "This is a very secret message!"
 
+    unicode_enc = False
     mode = 'arithmetic'
     block_size = 3 # for huffman and bins
-    temp = 0.92 # for arithmetic
+    temp = 0.9 # for arithmetic
     precision = 26 # for arithmetic
     sample_tokens = 100 # for sample
     topk = 300
@@ -33,7 +35,10 @@ def main():
         bin2words, words2bin = get_bins(len(enc.encoder), block_size)
 
     context = \
-"""kim jong il was the enigmatic leader of the most enigmatic country on earth. much about kim's life was, and is, shrouded in mystery. even the year of his birth -- 1942 -- has been contested by knowledgeable sources in south korea and russia, who claim kim was born a few years earlier but that his official birth date was pushed back to make him exactly 30 years younger than his father, north korea's founding leader, kim il sung. """
+"""Washington received his initial military training and command with the Virginia Regiment during the French and Indian War. He was later elected to the Virginia House of Burgesses and was named a delegate to the Continental Congress, where he was appointed Commanding General of the nation's Continental Army. Washington led American forces, allied with France, in the defeat of the British at Yorktown. Once victory for the United States was in hand in 1783, Washington resigned his commission.
+
+
+"""
 
     context_tokens = encode_context(context, enc)
 
@@ -42,9 +47,14 @@ def main():
 
     # First encode message to uniform bits, without any context
     # (not essential this is arithmetic vs ascii, but it's more efficient when the message is natural language)
-    message_ctx = [enc.encoder['<|endoftext|>']]
-    message_str += '<eos>'
-    message = decode_arithmetic(model, enc, message_str, message_ctx, precision=40, topk=60000)
+    if unicode_enc:
+        ba = bitarray.bitarray()
+        ba.frombytes(message_str.encode('utf-8'))
+        message = ba.tolist()
+    else:
+        message_ctx = [enc.encoder['<|endoftext|>']]
+        message_str += '<eos>'
+        message = decode_arithmetic(model, enc, message_str, message_ctx, precision=40, topk=60000)
 
     # Next encode bits into cover text, using arbitrary context
     Hq = 0
@@ -78,8 +88,14 @@ def main():
         print(message_rec)
         print("=" * 80)
         # Finally map message bits back to original text
-        reconst = encode_arithmetic(model, enc, message_rec, message_ctx, precision=40, topk=60000)
-        print(enc.decode(reconst[0]))
+        if unicode_enc:
+            message_rec = [bool(item) for item in message_rec]
+            ba = bitarray.bitarray(message_rec)
+            reconst = ba.tobytes().decode('utf-8', 'ignore')
+        else:
+            reconst = encode_arithmetic(model, enc, message_rec, message_ctx, precision=40, topk=60000)
+            reconst = enc.decode(reconst[0])
+        print(reconst)
 
 if __name__ == '__main__':
     main()
