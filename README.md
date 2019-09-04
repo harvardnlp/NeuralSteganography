@@ -5,7 +5,7 @@ This repository contains implementations of the steganography algorithms from "N
 
 ## Online Demo
 
-Our online demo can be found at [http://stegnography.live/](http://stegnography.live/).
+Our online demo can be found at [https://steganography.live/](https://steganography.live/).
 
 ## Language model
 
