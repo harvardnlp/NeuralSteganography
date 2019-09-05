@@ -1,7 +1,7 @@
 # STEGASURAS
 STEGanography via Arithmetic coding and Strong neURAl modelS
 
-This repository contains implementations of the steganography algorithms from "Neural Linguistic Steganography," Zachary M. Ziegler*, Yuntian Deng*, Alexander M. Rush
+This repository contains implementations of the steganography algorithms from ["Neural Linguistic Steganography," Zachary M. Ziegler*, Yuntian Deng*, Alexander M. Rush](https://arxiv.org/abs/1909.01496).
 
 ## Online Demo
 
