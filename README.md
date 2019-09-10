@@ -3,6 +3,8 @@ STEGanography via Arithmetic coding and Strong neURAl modelS
 
 This repository contains implementations of the steganography algorithms from ["Neural Linguistic Steganography," Zachary M. Ziegler*, Yuntian Deng*, Alexander M. Rush](https://arxiv.org/abs/1909.01496).
 
+There is a breaking change in pytorch 1.2, make sure to use pytorch 1.0 as in requirements.txt.
+
 ## Online Demo
 
 Our online demo can be found at [https://steganography.live/](https://steganography.live/).
