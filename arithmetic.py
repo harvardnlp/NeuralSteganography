@@ -1,35 +1,39 @@
 import torch
 import torch.nn.functional as F
+from transformers import DynamicCache
 
 from utils import limit_past, kl, entropy, bits2int, int2bits, is_sent_finish, num_same_from_beg
 
 def encode_arithmetic(model, enc, message, context, finish_sent=False, device='cuda', temp=1.0, precision=16, topk=50000):
-
     context = torch.tensor(context[-1022:], device=device, dtype=torch.long)
 
     max_val = 2**precision
-    threshold = 2**(-precision)
+    # threshold = 2**(-precision)
     cur_interval = [0, max_val] # bottom inclusive, top exclusive
 
     prev = context
     output = context
     past = None
 
-    total_num = 0
+    # total_num = 0
     total_num_for_stats = 0
     total_log_probs = 0
     total_kl = 0 # in bits
     total_entropy_ptau = 0
-    total_num_sents = 0
+    # total_num_sents = 0
 
     with torch.no_grad():
         i = 0
         sent_finish = False
         while i < len(message) or (finish_sent and not sent_finish):
-            logits, past = model(prev.unsqueeze(0), past=past)
+            out = model(prev.unsqueeze(0), past_key_values=DynamicCache.from_legacy_cache(past), use_cache=True)
+            logits = out.logits
+            past = out.past_key_values
             past = limit_past(past)
+
             logits[0, -1, -1] = -1e20 # endoftext token can't happen
             logits[0, -1, 628] = -1e20 # 2 newlines token can't happen
+
             logits, indices = logits[0, -1, :].sort(descending=True)
             logits = logits.double()
             logits_temp = logits / temp
@@ -107,8 +111,8 @@ def encode_arithmetic(model, enc, message, context, finish_sent=False, device='c
             # Update history with new token
             prev = indices[selection].view(1)
             output = torch.cat((output, prev))
-            total_num += 1
-            #print(enc.decode(prev.tolist()), message_bits[:num_bits_encoded])
+            # total_num += 1
+            # print(enc.decode(prev.tolist()), message_bits[:num_bits_encoded])
             
             # For text->bits->text
             partial = enc.decode(output[len(context):].tolist())
@@ -139,7 +143,7 @@ def decode_arithmetic(model, enc, text, context, device='cuda', temp=1.0, precis
     context = torch.tensor(context[-1022:], device=device, dtype=torch.long)
 
     max_val = 2**precision
-    threshold = 2**(-precision)
+    # threshold = 2**(-precision)
     cur_interval = [0, max_val] # bottom inclusive, top exclusive
 
     prev = context
@@ -148,10 +152,14 @@ def decode_arithmetic(model, enc, text, context, device='cuda', temp=1.0, precis
     with torch.no_grad():
         i = 0
         while i < len(inp):
-            logits, past = model(prev.unsqueeze(0), past=past)
+            out = model(prev.unsqueeze(0), past_key_values=DynamicCache.from_legacy_cache(past), use_cache=True)
+            logits = out.logits
+            past = out.past_key_values
             past = limit_past(past)
+
             logits[0, -1, -1] = -1e10 # endoftext can't happen
             logits[0, -1, 628] = -1e10 # 2 newlines can't happen
+
             logits, indices = logits[0, -1, :].sort(descending=True)
             logits = logits.double()
             logits_temp = logits / temp
@@ -179,16 +187,16 @@ def decode_arithmetic(model, enc, text, context, device='cuda', temp=1.0, precis
             # Add any mass to the top if removing/rounding causes the total prob to be too small
             cum_probs += cur_int_range-cum_probs[-1] # add
 
-            # Covnert to position in range
+            # Convert to position in range
             cum_probs += cur_interval[0]
 
             rank = (indices == inp[i]).nonzero().item()
 
             # Handle most errors that could happen because of BPE with heuristic
             if rank >= k:
-                true_token_text = enc.decoder[inp[i]]
+                true_token_text = enc.decode([inp[i]])
                 for rank_idx in range(k):
-                    prop_token_text = enc.decoder[indices[rank_idx].item()]
+                    prop_token_text = enc.decode([indices[rank_idx].item()])
                     # common case that is not caught
                     if inp[i] == 128 and indices[rank_idx] == 198:
                         rank = rank_idx
@@ -211,7 +219,7 @@ def decode_arithmetic(model, enc, text, context, device='cuda', temp=1.0, precis
                         whole_text = true_token_text
                         num_extra = 1
                         while len(whole_text) < len(prop_token_text):
-                            whole_text += enc.decoder[inp[i+num_extra]]
+                            whole_text += enc.decode([inp[i+num_extra]])
                             num_extra += 1
                         if prop_token_text == whole_text[:len(prop_token_text)]:
                             rank = rank_idx
@@ -254,8 +262,7 @@ def decode_arithmetic(model, enc, text, context, device='cuda', temp=1.0, precis
             
             # Update history with new token
             prev = torch.tensor([inp[i]], device=device, dtype=torch.long)
-            #print(enc.decode([inp[i]]), new_bits)
+            # print(enc.decode([inp[i]]), new_bits)
             i += 1
     
     return message
-
