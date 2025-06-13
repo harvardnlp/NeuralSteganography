@@ -1,15 +1,25 @@
 # STEGASURAS
 STEGanography via Arithmetic coding and Strong neURAl modelS
 
-This repository contains implementations of the steganography algorithms from ["Neural Linguistic Steganography," Zachary M. Ziegler*, Yuntian Deng*, Alexander M. Rush](https://arxiv.org/abs/1909.01496).
+Fork of the original implementations of the steganography algorithms from ["Neural Linguistic Steganography," Zachary M. Ziegler*, Yuntian Deng*, Alexander M. Rush](https://arxiv.org/abs/1909.01496).
 
-There is a breaking change in pytorch 1.2, make sure to use pytorch 1.0 as in requirements.txt.
+This fork is maintained and updated by Sabrina Ning.
+
+## Updates in this Fork
+
+Legacy libraries replaced:
+- `pytorch_transformers` &rarr; `transformers`
+- Updated other deprecated APIs
+
+All dependencies are listed in `requirements.txt`.
+
+**NOTE:** This fork only updates the arithmetic coding-based algorithm for compatibility with modern Python and PyTorch environments. The Huffman and binning algorithms remain in their original state and may not work out of the box.
 
 ## Online Demo
 
 Our online demo can be found at [https://steganography.live/](https://steganography.live/).
 
-## Language model
+## Language Model
 
 Experiments in the paper use the medium (345M parameter) GPT model via [pytorch_transformers](https://github.com/huggingface/pytorch-transformers). For compute reasons the default in this code base is the small version but the medium or large versions can be used by changing the `model_name` parameter of `get_model`.
 
