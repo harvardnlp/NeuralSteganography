@@ -11,7 +11,7 @@ Legacy libraries replaced:
 - `pytorch_transformers` &rarr; `transformers`
 - Updated other deprecated APIs
 
-All dependencies are listed in `requirements.txt`.
+All dependencies are listed in `requirements.txt`, including CUDA 12 packages for GPU support.
 
 **NOTE:** This fork only updates the arithmetic coding-based algorithm for compatibility with modern Python and PyTorch environments. The Huffman and binning algorithms remain in their original state and may not work out of the box.
 
@@ -31,3 +31,9 @@ The steganography algorithms implemented are:
 3. The binning algorithm from [Generating Steganographic Text with LSTMs](https://arxiv.org/abs/1705.10742)
 
 An example of encoding and decoding a message is in `run_single.py`. The algorithm used is determined by the `mode` parameter.
+
+An example of encoding and decoding a message using the arithmetic coding-based algorithm is in `run_arithmetic.py`. To change the model, modify the `model_name` parameter of `run_single`.
+
+Currently supported models:
+- `gpt2`, `gpt2-medium`, `gpt2-large`, `gpt2-xl`
+- `Qwen/Qwen2.5-0.5B`, `Qwen/Qwen2.5-1.5B`
