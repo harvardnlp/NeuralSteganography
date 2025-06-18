@@ -1,7 +1,4 @@
-import numpy as np
 import bitarray
-import sys
-import re
 import math
 
 from utils import get_model, encode_context
@@ -52,7 +49,7 @@ def main():
         ba.frombytes(message_str.encode('utf-8'))
         message = ba.tolist()
     else:
-        message_ctx = [enc.encoder['<|endoftext|>']]
+        message_ctx = enc.encode('<|endoftext|>')
         message_str += '<eos>'
         message = decode_arithmetic(model, enc, message_str, message_ctx, precision=40, topk=60000)
 
